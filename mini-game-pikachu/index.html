@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mini Game Pikachu - Salve Ash</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(to top, #7ec8ff, #ffffff);
+      font-family: Arial, sans-serif;
+      user-select: none;
+    }
+
+    #game {
+      position: relative;
+      width: 800px;
+      height: 300px;
+      margin: 20px auto;
+      background: #5c94fc;
+      border: 5px solid #333;
+      overflow: hidden;
+    }
+
+    #ground {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 50px;
+      background: #3e9e41;
+    }
+
+    #pikachu {
+      position: absolute;
+      bottom: 50px;
+      left: 50px;
+      width: 50px;
+      height: 50px;
+      background: url('images/pikachu.gif') no-repeat center/contain;
+      transition: left 0.1s;
+    }
+
+    #ash {
+      position: absolute;
+      bottom: 50px;
+      right: 50px;
+      width: 40px;
+      height: 60px;
+      background: url('images/ash-PNG-File.png') no-repeat center/contain;
+    }
+
+    .obstacle {
+      position: absolute;
+      bottom: 50px;
+      width: 30px;
+      height: 50px;
+      background: url('images/Giant-Stone-PNG-Pic.png') no-repeat center/contain;
+    }
+
+    #message {
+      text-align: center;
+      font-size: 24px;
+      color: green;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="game">
+    <div id="ground"></div>
+    <div id="pikachu"></div>
+    <div id="ash"></div>
+  </div>
+  <div id="message"></div>
+
+  <script>
+    const pikachu = document.getElementById('pikachu');
+    const ash = document.getElementById('ash');
+    const game = document.getElementById('game');
+    const message = document.getElementById('message');
+
+    const gameWidth = game.clientWidth;
+
+    let pikachuPos = { x: 50, y: 50 };
+    let velocityY = 0;
+    const gravity = 1.5;
+    let isJumping = false;
+
+    const obstaclesData = [
+      { x: 250, width: 30, height: 50 },
+      { x: 400, width: 30, height: 50 },
+      { x: 600, width: 30, height: 50 },
+    ];
+
+    let obstacles = [];
+
+    function createObstacles() {
+      obstaclesData.forEach(ob => {
+        const div = document.createElement('div');
+        div.classList.add('obstacle');
+        div.style.left = ob.x + 'px';
+        div.style.height = ob.height + 'px';
+        div.style.width = ob.width + 'px';
+        div.style.bottom = '50px';
+        game.appendChild(div);
+        obstacles.push(div);
+      });
+    }
+
+    createObstacles();
+
+    function updatePikachu() {
+      velocityY += gravity;
+      pikachuPos.y -= velocityY;
+
+      if (pikachuPos.y <= 50) {
+        pikachuPos.y = 50;
+        velocityY = 0;
+        isJumping = false;
+      }
+
+      pikachu.style.bottom = pikachuPos.y + 'px';
+      pikachu.style.left = pikachuPos.x + 'px';
+    }
+
+    function checkCollision() {
+      const pikachuRect = pikachu.getBoundingClientRect();
+
+      for (let ob of obstacles) {
+        const obRect = ob.getBoundingClientRect();
+
+        if (
+          pikachuRect.right > obRect.left &&
+          pikachuRect.left < obRect.right &&
+          pikachuRect.bottom > obRect.top &&
+          pikachuRect.top < obRect.bottom
+        ) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function checkWin() {
+      const pikachuRect = pikachu.getBoundingClientRect();
+      const ashRect = ash.getBoundingClientRect();
+
+      if (
+        pikachuRect.right > ashRect.left &&
+        pikachuRect.left < ashRect.right &&
+        pikachuRect.bottom > ashRect.top &&
+        pikachuRect.top < ashRect.bottom
+      ) {
+        return true;
+      }
+      return false;
+    }
+
+    function moveRight() {
+      if (pikachuPos.x < gameWidth - 50) {
+        pikachuPos.x += 10;
+      }
+    }
+
+    document.addEventListener('keydown', e => {
+      if (message.textContent) return;
+
+      if (e.code === 'ArrowRight') {
+        moveRight();
+      }
+      if (e.code === 'Space' || e.code === 'ArrowUp') {
+        if (!isJumping) {
+          velocityY = 20;
+          isJumping = true;
+        }
+      }
+    });
+
+    function gameLoop() {
+      updatePikachu();
+
+      if (checkCollision()) {
+        message.style.color = 'red';
+        message.textContent = 'Você bateu no obstáculo! Tente novamente.';
+        return;
+      }
+
+      if (checkWin()) {
+        message.style.color = 'green';
+        message.textContent = 'Parabéns! Pikachu salvou o Ash!';
+        return;
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+  </script>
+
+</body>
+
+</html>
